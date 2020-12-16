@@ -417,6 +417,7 @@ func (client *AppAnyClient) GetRegistry(task *RawTask, proc[] *Process) ([]*Regi
 
 	for _, process := range proc{
 		msg := client.getRegistryMsg(id, task.ID, process.OID)
+		fmt.Println(msg)
 		doneMsg := client.getDoneMsg(id)
 
 		if err := client.sendMessage(msg); err != nil {
