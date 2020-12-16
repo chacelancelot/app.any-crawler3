@@ -1,0 +1,19 @@
+# filter params for public tasks
+public_tasks:
+  # a malware tag e.g. "emotet", see https://any.run/malware-trends/
+  # only get tasks marked as the same malware family.
+  tag: "emotet"
+  # if true only get significant tasks. It is false by default.
+  significant: false
+  # a list of extensions separated by a comma. Possible values are: "PE EXE", "Microsoft Office".
+  extensions: "PE DLL"
+  # a list of detection type separated by a comma. Possible values are "Malicious", "Suspicious", "No threats"
+  detections: "Malicious"
+
+export:
+  processes: true
+  ATT&CK_matrix: true
+  ip: true
+  domain: true
+  http: true
+  threat: true
