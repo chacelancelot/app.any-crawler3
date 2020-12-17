@@ -92,11 +92,50 @@ func dumpTask(client *AppAnyClient, Tag string, task *RawTask) error {
 		return err
 	}
 
-	regis, err := client.GetRegistry(task , processes)
-	if err != nil {
-		fmt.Println( "cannot dump RawTask GetRegistry gia tri err:", err)
-		return err
+	registry := make([]*Registries, 0) 
+	for _, pro := range processes{
+		regis, err := client.GetRegistry(task, pro)
+		if err != nil {
+			fmt.Println( "cannot dump RawTask GetRegistry gia tri err:", err)
+			// return err
+		}else{
+			registry = append(registry, regis...)
+		}	
 	}
+
+	drop := make([]*DropFile, 0)
+	for _, pro := range processes{
+		dropFile, err := client.GetDropFile(task, pro)
+		if err != nil {
+			fmt.Println( "cannot dump RawTask GetDropFile gia tri err:", err)
+			// return err
+		}else{
+			drop = append(drop, dropFile...)
+		}	
+	}
+
+	proCon := make([]*ProConnect, 0)
+	for _, pro := range processes{
+		proConnect, err := client.GetProConnect(task, pro)
+		if err != nil {
+			fmt.Println( "cannot dump RawTask GetProConnect gia tri err:", err)
+			// return err
+		}else{
+			proCon = append(proCon, proConnect...)
+		}	
+	}
+
+	proMod := make([]*ProModule, 0) 
+	for _, pro := range processes{
+		proModule, err := client.GetProModule(task, pro)
+		if err != nil {
+			fmt.Println( "cannot dump RawTask GetProModule gia tri err:", err)
+			// return err
+		}else{
+			proMod = append(proMod, proModule...)
+		}	
+	}
+	
 
 	//set task info
 	mainObject := task.Fields.Public.Objects.MainObject
@@ -110,7 +149,10 @@ func dumpTask(client *AppAnyClient, Tag string, task *RawTask) error {
 		Domain:	   			domain,
 		HttpRequests: 		httpRequests,
 		Threats:            threats,
-		Registries:			regis,
+		Registries:			registry,
+		DropFile:			drop,
+		ProConnect:			proCon,
+		ProModule:			proMod,
 	}
 
 	//convert struct to json

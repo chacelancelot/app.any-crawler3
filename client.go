@@ -19,17 +19,18 @@ const (
 	processesMsgFormat          = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"process\",\"params\":[{\"taskID\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"status\":100,\"important\":true}]}"]`
 	allIncidentsMsgFormat       = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"allIncidents\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"}]}"]`
 	
-	//dnsCounterMsgFormat 		= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"dnsCounter\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},false]}"]`
 	dnsMsgFormat                = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"dns\",\"params\":[{\"task\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":\"\"},100]}"]`
 
-	//ipsCounterMsgFormat			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"ipsCounter\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},false]}"]`
     ipsMsgFormat                = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"ips\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":null},100]}"]`
 	
-	//httpRequestsCounterMsgFormat= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"reqsCounter\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},false]}"]`
 	httpRequestsMsgFormat       = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"reqs\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":null},100]}"]`
 
 	threatsMsgFormat 			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"threats\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"uuid\":\"%s\",\"searchParam\":null}]}"]`
+	
 	registryMsgFormat			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processRegistriesWrite\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},{\"$type\":\"oid\",\"$value\":\"%s\"},100]}"]`
+	dropFileMsgFormat			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"filesOfProcess\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},50,{\"$type\":\"oid\",\"$value\":\"%s\"}]}"]`
+	processConnectMsgFormat		= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processConnections\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"processOID\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"limit\":50}]}"]`
+	processModuleMsgFormat 		= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processModules\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},{\"$type\":\"oid\",\"$value\":\"%s\"},0]}"]`
 
 	doneMsgFormat               = `{"msg":"ready","subs":["%s"]}`
 	pingMsg                     = `{"msg":"ping"}`
@@ -116,6 +117,18 @@ func (client *AppAnyClient) getThreatsMsg(id string, taskId string, uuid string)
 
 func (client *AppAnyClient) getRegistryMsg(id string, taskId string, proc string) string {
 	return fmt.Sprintf(registryMsgFormat, id, taskId, proc)
+}
+
+func (client *AppAnyClient) getDropFileMsg(id string, taskId string, proc string) string {
+	return fmt.Sprintf(dropFileMsgFormat, id, taskId, proc)
+}
+
+func (client *AppAnyClient) getProcessConnectMsg(id string, taskId string, proc string) string {
+	return fmt.Sprintf(processConnectMsgFormat, id, taskId, proc)
+}
+
+func (client *AppAnyClient) getProcessModuleMsg(id string, taskId string, proc string) string {
+	return fmt.Sprintf(processModuleMsgFormat, id, taskId, proc)
 }
 
 
@@ -410,33 +423,118 @@ func (client *AppAnyClient) GetThreats(task *RawTask) ([]*Threats, error) {
 }
 
 // GetRegistry returns a list of Registry as "H_KEY" tab
-func (client *AppAnyClient) GetRegistry(task *RawTask, proc[] *Process) ([]*Registries, error) {
+func (client *AppAnyClient) GetRegistry(task *RawTask, proc *Process) ([]*Registries, error) {
 	regis := make([]*Registries, 0)
-	//var proc *Process
+	
 	id := generateRandStr(len("dMXwEbLvfYZMH2Tca"))
+	msg := client.getRegistryMsg(id, task.ID, proc.OID)
+	//fmt.Println(msg)
+	doneMsg := client.getDoneMsg(id)
 
-	for _, process := range proc{
-		msg := client.getRegistryMsg(id, task.ID, process.OID)
-		fmt.Println(msg)
-		doneMsg := client.getDoneMsg(id)
-
-		if err := client.sendMessage(msg); err != nil {
-			return nil, fmt.Errorf("in sendMessage: %s", err)
-		}
-		for { // receive registry
-			var registry *RawRegistries
-			buffer, err := client.recvMessage()
-			if err != nil {
-				return nil, fmt.Errorf("in recvMessage: %s", err)
-			}
-			if buffer == doneMsg {
-				break
-			}
-			if err := json.Unmarshal([]byte(buffer), &registry); err != nil {
-				return nil, fmt.Errorf("in Unmarshal: %s", err)
-			}
-			regis = append(regis, NewRegistries(registry))
-		}	
+	if err := client.sendMessage(msg); err != nil {
+		return nil, fmt.Errorf("in sendMessage: %s", err)
 	}
+	for { // receive registry
+		var registry *RawRegistries
+		buffer, err := client.recvMessage()
+		if err != nil {
+			return nil, fmt.Errorf("in recvMessage: %s", err)
+		}
+		if buffer == doneMsg {
+			break
+		}
+		if err := json.Unmarshal([]byte(buffer), &registry); err != nil {
+			return nil, fmt.Errorf("in Unmarshal: %s", err)
+		}
+		regis = append(regis, NewRegistries(registry))
+	}	
 	return regis, nil	
+}
+
+// GetDropFile returns a list of File delete as tab of process
+func (client *AppAnyClient) GetDropFile(task *RawTask, proc *Process) ([]*DropFile, error) {
+	drop := make([]*DropFile, 0)
+	
+	id := generateRandStr(len("ToDENCSZ9gnoxbPP3"))	
+	msg := client.getDropFileMsg(id, task.ID, proc.OID)
+	//fmt.Println(msg)
+	doneMsg := client.getDoneMsg(id)
+
+	if err := client.sendMessage(msg); err != nil {
+		return nil, fmt.Errorf("in sendMessage: %s", err)
+	}
+	for { // receive event.drop
+		var dropfile *RawDropFile
+		buffer, err := client.recvMessage()
+		if err != nil {
+			return nil, fmt.Errorf("in recvMessage: %s", err)
+		}
+		if buffer == doneMsg {
+			break
+		}
+		if err := json.Unmarshal([]byte(buffer), &dropfile); err != nil {
+			return nil, fmt.Errorf("in Unmarshal: %s", err)
+		}
+		drop = append(drop, NewDropFile(dropfile))
+	}	
+	return drop, nil	
+}
+
+// GetProConnect returns a list of process connect ip,domain
+func (client *AppAnyClient) GetProConnect(task *RawTask, proc *Process) ([]*ProConnect, error) {
+	proCon := make([]*ProConnect, 0)
+	id := generateRandStr(len("DyrEyzFkcWL8Spngt"))
+
+	msg := client.getProcessConnectMsg(id, task.ID, proc.OID)
+	//fmt.Println(msg)
+	doneMsg := client.getDoneMsg(id)
+
+	if err := client.sendMessage(msg); err != nil {
+		return nil, fmt.Errorf("in sendMessage: %s", err)
+	}
+	for { // receive event connect
+		var proConnect *RawProConnect
+		buffer, err := client.recvMessage()
+		if err != nil {
+			return nil, fmt.Errorf("in recvMessage: %s", err)
+		}
+		if buffer == doneMsg {
+			break
+		}
+		if err := json.Unmarshal([]byte(buffer), &proConnect); err != nil {
+			return nil, fmt.Errorf("in Unmarshal: %s", err)
+		}
+		proCon = append(proCon, NewProConnect(proConnect))
+	}	
+	
+	return proCon, nil	
+}
+
+// GetProModule returns a list of File module as tab of process
+func (client *AppAnyClient) GetProModule(task *RawTask, proc *Process) ([]*ProModule, error) {
+	proMod := make([]*ProModule, 0)
+	id := generateRandStr(len("N47mSKx6LxhwRsRH3"))
+
+	msg := client.getDropFileMsg(id, task.ID, proc.OID)
+	//fmt.Println(msg)
+	doneMsg := client.getDoneMsg(id)
+
+	if err := client.sendMessage(msg); err != nil {
+		return nil, fmt.Errorf("in sendMessage: %s", err)
+	}
+	for { // receive event.module
+		var proModule *RawProModule
+		buffer, err := client.recvMessage()
+		if err != nil {
+			return nil, fmt.Errorf("in recvMessage: %s", err)
+		}
+		if buffer == doneMsg {
+			break
+		}
+		if err := json.Unmarshal([]byte(buffer), &proModule); err != nil {
+			return nil, fmt.Errorf("in Unmarshal: %s", err)
+		}
+		proMod = append(proMod, NewProModule(proModule))
+	}		
+	return proMod, nil	
 }

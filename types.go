@@ -328,7 +328,7 @@ type (
                 Type  string `json:"$type"`
                 Value string `json:"$value"`
             } `json:"taskid"`
-            Date       int64  `json:"date"`
+            //Date       int64  `json:"date"`
             Msg        string `json:"msg"`
             Dstport    int    `json:"dstport"`
             Dstip      string `json:"dstip"`
@@ -372,7 +372,87 @@ type (
             Key       string `json:"key"`
             TypeValue string `json:"typeValue"`
         } `json:"fields"`
-    }
+	}
+	
+	RawDropFile struct{
+		Msg        string `json:"msg"`
+		Collection string `json:"collection"`
+		ID         string `json:"id"`
+		Fields     struct {
+			Size      int    `json:"size"`
+			Md5       string `json:"md5"`
+			Available bool   `json:"available"`
+			Nocontent bool   `json:"nocontent"`
+			EOF       bool   `json:"eof"`
+			Filename  string `json:"filename"`
+			// Time      struct {
+			// 	Date int64 `json:"$date"`
+			// } `json:"time"`
+			ProcessOID struct {
+				Type  string `json:"$type"`
+				Value string `json:"$value"`
+			} `json:"processOID"`
+			ContentType string `json:"contentType"`
+		} `json:"fields"`
+		
+	}
+
+	RawProConnect struct{
+		Msg        string `json:"msg"`
+		Collection string `json:"collection"`
+		ID         string `json:"id"`
+		Fields     struct {
+			ID   string `json:"id"`
+			Task struct {
+				Type  string `json:"$type"`
+				Value string `json:"$value"`
+			} `json:"task"`
+			// Time      int64  `json:"time"`
+			// TimeClose int64  `json:"timeClose"`
+			IP        string `json:"ip"`
+			Port      int    `json:"port"`
+			Prot      string `json:"prot"`
+			LocalPort int    `json:"localPort"`
+			Direction string `json:"direction"`
+			Country   string `json:"country"`
+			Asn       string `json:"asn"`
+			Traffic   struct {
+				Send int `json:"send"`
+				Recv int `json:"recv"`
+			} `json:"traffic"`
+			ProcessOID struct {
+				Type  string `json:"$type"`
+				Value string `json:"$value"`
+			} `json:"processOID"`
+			ProcessName string `json:"processName"`
+			Pid         int    `json:"pid"`
+			Domain      string `json:"domain"`
+			Type        int    `json:"type"`
+		} `json:"fields"`
+	}
+
+	RawProModule struct{
+		Msg        string `json:"msg"`
+		Collection string `json:"collection"`
+		ID         string `json:"id"`
+		Fields     struct {
+			Task struct {
+				Type  string `json:"$type"`
+				Value string `json:"$value"`
+			} `json:"task"`
+			ProcessOID struct {
+				Type  string `json:"$type"`
+				Value string `json:"$value"`
+			} `json:"processOID"`
+			Image    string `json:"image"`
+			HeadHash string `json:"head_hash"`
+			Protect  string `json:"protect"`
+			// Time     struct {
+			// 	Date int64 `json:"$date"`
+			// } `json:"time"`
+			Status string `json:"status"`
+		} `json:"fields"`	
+	}
 )
 
 //Mapping all
@@ -449,7 +529,33 @@ type(
         Value           string
         Operation       string
         TypeValue       string
-    }
+	}
+	
+	DropFile struct{
+		ProcessOID		string
+		Size 			int
+		Nocontent 		bool
+		EOF 			bool
+		Filename		string
+		ContentType 	string
+	}
+
+	ProConnect struct{
+		ProcessOID 		string
+		IP				string
+		Port 			int
+		Prot 			string
+		Domain 			string
+		Type 			int
+	}
+
+	ProModule struct{
+		ProcessOID 		string
+		Image 			string
+		HeadHash 		string
+		Protect 		string
+		Status 			string
+	}
 	
 	ProcessData struct {
         Name                string
@@ -461,7 +567,10 @@ type(
         Domain              []*DNSQueries
         HttpRequests        []*HttpRequests
 		Threats             []*Threats 
-		Registries          []*Registries       
+		Registries          []*Registries 
+		DropFile			[]*DropFile
+		ProConnect			[]*ProConnect
+		ProModule     		[]*ProModule
     }
 )
 
@@ -587,5 +696,37 @@ func NewRegistries(rawRegistries *RawRegistries) *Registries{
         Value:           rawRegistries.Fields.Value,
         Operation:       rawRegistries.Fields.Operation,
         TypeValue:       rawRegistries.Fields.TypeValue,
+	}
+}
+
+func NewDropFile(rawDropFile *RawDropFile) *DropFile{
+	return &DropFile{
+        ProcessOID:		rawDropFile.Fields.ProcessOID.Value,
+		Size: 			rawDropFile.Fields.Size,
+		Nocontent: 		rawDropFile.Fields.Nocontent,
+		EOF: 			rawDropFile.Fields.EOF,
+		Filename:		rawDropFile.Fields.Filename,
+		ContentType: 	rawDropFile.Fields.ContentType,
+	}
+}
+
+func NewProConnect(rawProConnect *RawProConnect) *ProConnect{
+	return &ProConnect{
+		ProcessOID: 		rawProConnect.Fields.ProcessOID.Value,
+		IP:					rawProConnect.Fields.IP,
+		Port: 				rawProConnect.Fields.Port,
+		Prot: 				rawProConnect.Fields.Prot,
+		Domain: 			rawProConnect.Fields.Domain,
+		Type: 				rawProConnect.Fields.Type,
+	}
+}
+
+func NewProModule(rawProModule *RawProModule) *ProModule{
+	return &ProModule{
+        ProcessOID: 		rawProModule.Fields.ProcessOID.Value,
+		Image: 				rawProModule.Fields.Image,
+		HeadHash: 			rawProModule.Fields.HeadHash,
+		Protect: 			rawProModule.Fields.Protect,
+		Status: 			rawProModule.Fields.Status,
 	}
 }
