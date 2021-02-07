@@ -36,8 +36,8 @@ func init() {
 
 // app.any.run endpoint
 var endpointList = [...]string{
-	"wss://app.any.run/sockjs/399/i73_d8dy/websocket",
-	"wss://app.any.run/sockjs/529/c95zff_m/websocket",
+	"wss://app.any.run/sockjs/402/me83v5fg/websocket",,
+	"wss://app.any.run/sockjs/823/dqj28hrf/websocket",
 }
 
 // ghi file
