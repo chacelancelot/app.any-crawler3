@@ -19,15 +19,15 @@ const (
 	processesMsgFormat          = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"process\",\"params\":[{\"taskID\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"status\":100,\"important\":true}]}"]`
 	allIncidentsMsgFormat       = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"allIncidents\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"}]}"]`
 	
-	dnsMsgFormat                = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"dns\",\"params\":[{\"task\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":\"\"},100]}"]`
+	dnsMsgFormat                = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"dns\",\"params\":[{\"task\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":\"\"},70]}"]`
 
-    ipsMsgFormat                = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"ips\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":null},100]}"]`
+    ipsMsgFormat                = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"ips\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":null},70]}"]`
 	
-	httpRequestsMsgFormat       = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"reqs\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":null},100]}"]`
+	httpRequestsMsgFormat       = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"reqs\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":null},70]}"]`
 
 	threatsMsgFormat 			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"threats\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"uuid\":\"%s\",\"searchParam\":null}]}"]`
 	
-	registryMsgFormat			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processRegistriesWrite\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},{\"$type\":\"oid\",\"$value\":\"%s\"},100]}"]`
+	registryMsgFormat			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processRegistriesWrite\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},{\"$type\":\"oid\",\"$value\":\"%s\"},70]}"]`
 	dropFileMsgFormat			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"filesOfProcess\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},50,{\"$type\":\"oid\",\"$value\":\"%s\"}]}"]`
 	processConnectMsgFormat		= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processConnections\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"processOID\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"limit\":50}]}"]`
 	processModuleMsgFormat 		= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processModules\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},{\"$type\":\"oid\",\"$value\":\"%s\"},0]}"]`
@@ -249,8 +249,7 @@ func (client *AppAnyClient) GetTasks(numOfTasks, startIndex int) ([]*RawTask, er
 			//fmt.Println( "gia tri buffer:", buffer)
 			if err := json.Unmarshal([]byte(buffer), &task); err != nil {
 				fmt.Println( "gia tri buffer:", buffer)
-				return nil, fmt.Errorf("in Unmarshal: %s", err)
-				
+				return nil, fmt.Errorf("in Unmarshal: %s", err)				
 			}
 			tasks = append(tasks, task)
 		}
@@ -314,7 +313,7 @@ func (client *AppAnyClient) GetIncidents(task *RawTask) ([]*Incident, error) {
 	return incidents, nil
 }
 
-// GetDNSQueries returns a list of DSN queries as "DNS Queries" tab
+// GetDNSQueries returns a list of DNS queries as "DNS Queries" tab
 func (client *AppAnyClient) GetDNSQueries(task *RawTask) ([]*DNSQueries, error) {
 	dnsQueries := make([]*DNSQueries, 0)
 	id := generateRandStr(len("LMvsM2JcM68YCPLrD"))

@@ -1,14 +1,32 @@
 # filter params for public tasks
 public_tasks:
-  # a malware tag e.g. "emotet", see https://any.run/malware-trends/
+  # a malware tag e.g. "emotet", see https://any.run/malware-trends/ 
   # only get tasks marked as the same malware family.
-  tag: "trickbot"
+  # adwind agenttesla avemaria azorult crimson danabot dharma dridex emotet flawedammyy
+  # formbook gandcrab glupteba gootkit hancitor hawkeye icedid lokibot maze nanocore nemty netwalker 
+  # netwire njrat orcus pony predator qbot quasar raccoon remcos revenge ryuk smoke 
+  # sodinokibi trickbot troldesh ursnif vidar wannacry wshrat zloader macros40 miner masslogger
+  # backdoor jsoutprox keylogger SecurityXploded 404keylogger phish-pdf netsupport sinkhole phish-outlook
+  # phish-adobe cracknet underminer necurs magecart sogou coinhive amadey ixware tvrat pcrat
+  # autoit CVE-2017-11882 
+  # teamviewer pua gh0st taurus socelars satan searchsuite maldoc-42 meterpreter fareit tinynuke lavasoft wannacryptor
+  tag: 
   # if true only get significant tasks. It is false by default.
   significant: false
   # a list of extensions separated by a comma. Possible values are: "PE EXE", "Microsoft Office".
-  extensions: "PE EXE"
+  # PE EXE PE DLL JAVA HTML Documents Adobe Flash Adobe PDF Microsoft Office Scripts Email files Archive files
+  # extensions: "PE EXE"
+  # extensions: "PE DLL"
+  # extensions: "JAVA"
+  # extensions: "HTML Documents"
+  # extensions: "Adobe Flash"
+  # extensions: "Adobe PDF"
+  # extensions: "Microsoft Office"
+  # extensions: "Scripts"
+  # extensions: "Email files"
+  extensions: "Archive files"
   # a list of detection type separated by a comma. Possible values are "Malicious", "Suspicious", "No threats"
-  detections: "Malicious"
+  detections: "Suspicious"
 
 export:
   processes: true

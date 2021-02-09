@@ -36,8 +36,8 @@ func init() {
 
 // app.any.run endpoint
 var endpointList = [...]string{
-	"wss://app.any.run/sockjs/399/i73_d8dy/websocket",
-	"wss://app.any.run/sockjs/529/c95zff_m/websocket",
+	"wss://app.any.run/sockjs/172/i73_d8dy/websocket",
+	"wss://app.any.run/sockjs/283/c95zff_m/websocket",
 }
 
 // ghi file
@@ -97,7 +97,7 @@ func dumpTask(client *AppAnyClient, Tag string, task *RawTask) error {
 		regis, err := client.GetRegistry(task, pro)
 		if err != nil {
 			fmt.Println( "cannot dump RawTask GetRegistry gia tri err:", err)
-			// return err
+			return err
 		}else{
 			registry = append(registry, regis...)
 		}	
@@ -108,35 +108,12 @@ func dumpTask(client *AppAnyClient, Tag string, task *RawTask) error {
 		dropFile, err := client.GetDropFile(task, pro)
 		if err != nil {
 			fmt.Println( "cannot dump RawTask GetDropFile gia tri err:", err)
-			// return err
+			return err
 		}else{
 			drop = append(drop, dropFile...)
 		}	
 	}
-
-	proCon := make([]*ProConnect, 0)
-	for _, pro := range processes{
-		proConnect, err := client.GetProConnect(task, pro)
-		if err != nil {
-			fmt.Println( "cannot dump RawTask GetProConnect gia tri err:", err)
-			// return err
-		}else{
-			proCon = append(proCon, proConnect...)
-		}	
-	}
-
-	proMod := make([]*ProModule, 0) 
-	for _, pro := range processes{
-		proModule, err := client.GetProModule(task, pro)
-		if err != nil {
-			fmt.Println( "cannot dump RawTask GetProModule gia tri err:", err)
-			// return err
-		}else{
-			proMod = append(proMod, proModule...)
-		}	
-	}
 	
-
 	//set task info
 	mainObject := task.Fields.Public.Objects.MainObject
 	processData := &ProcessData{
@@ -151,8 +128,8 @@ func dumpTask(client *AppAnyClient, Tag string, task *RawTask) error {
 		Threats:            threats,
 		Registries:			registry,
 		DropFile:			drop,
-		ProConnect:			proCon,
-		ProModule:			proMod,
+		//ProConnect:			proCon,
+		//ProModule:			proMod,
 	}
 
 	//convert struct to json
@@ -214,86 +191,82 @@ func main() {
 		numOfTasks = totalTaskCount - startTaskIndex
 		log.Warn().Msgf("only able to crawl %d tasks", numOfTasks)
 	}
-	log.Info().Msgf("Start crawling tasks (number %d, startIndex: %d)", numOfTasks, startTaskIndex)
-	tasks, err := client.GetTasks(int(numOfTasks), int(startTaskIndex))
-	if err != nil {
-		log.Fatal().Err(err).Msg("in GetProcesses")
-	}
-	
-	
+
 
 	//create folder
-	var Tag string  = appConfig.taskTag + "-"
-	for _, extension := range appConfig.taskExtensions{
-		Tag = Tag + extension + ","
-	}
-	Tag = Tag + "-"
-	for _, detection := range appConfig.taskDetections{
-		Tag = Tag + strconv.Itoa(detection) 
-	}
-	
-	os.Mkdir(Tag, os.ModePerm)
+	//var Tag string  = appConfig.taskTag + "-"
+	//for _, extension := range appConfig.taskExtensions{
+	//	Tag = Tag + extension + ","
+	//}
+	//Tag = Tag + "-"
+	//for _, detection := range appConfig.taskDetections{
+	//	Tag = Tag + strconv.Itoa(detection)
+	//}
+	//
+	//os.Mkdir(Tag, os.ModePerm)
 
-	var counter = startTaskIndex;
+	//var counter = startTaskIndex;
 	//for each task of list task
-	for _, task := range tasks {
-		fmt.Print("\n\n")
-		// print task info
-		log.Info().Msg(task.GetIdentity())
-		fmt.Println( "STT: ", counter)
-		counter++	
-		if err := dumpTask(client, Tag, task); err != nil {
-			fmt.Println("cannot dump RawTask gia tri err:", err)			
-			log.Info().Msg("cannot dump RawTask,")
-			client.conn.Close()
-			return
-		}		
+	//for _, task := range tasks {
+	//	fmt.Print("\n\n")
+	//	// print task info
+	//	log.Info().Msg(task.GetIdentity())
+	//	fmt.Println( "STT: ", counter)
+	//	counter++
+	//	if err := dumpTask(client, Tag, task); err != nil {
+	//		fmt.Println("cannot dump RawTask gia tri err:", err)
+	//		log.Info().Msg("cannot dump RawTask,")
+	//		client.conn.Close()
+	//		return
+	//	}
+	//}
+
+	log.Info().Msgf("Start crawling tasks (number %d, startIndex: %d)", numOfTasks, startTaskIndex)
+	//tasks, err := client.GetTasks(int(numOfTasks), int(startTaskIndex))
+	//if err != nil {
+	//	log.Fatal().Err(err).Msg("in GetProcesses")
+	//}
+	var counter = startTaskIndex;
+	var endTaskIndex = startTaskIndex + numOfTasks
+	for i := startTaskIndex; i < endTaskIndex; i += 50{
+		tasks, err := client.GetTasks(int(50), int(i))
+		if err != nil {
+			log.Fatal().Err(err).Msg("in GetProcesses")
+		}
+		//create folder
+		var Tag string  = appConfig.taskTag + "-"
+		for _, extension := range appConfig.taskExtensions{
+			Tag = Tag + extension + ","
+		}
+		Tag = Tag + "-"
+		for _, detection := range appConfig.taskDetections{
+			Tag = Tag + strconv.Itoa(detection)
+		}
+
+		os.Mkdir(Tag, os.ModePerm)
+
+		//client.conn.Close()
+
+		//for each task of list task
+
+		for _, task := range tasks {
+			fmt.Print("\n\n")
+			// print task info
+			log.Info().Msg(task.GetIdentity())
+
+			fmt.Println( "STT: ", counter)
+			counter++
+
+			if err := dumpTask(client, Tag, task); err != nil {
+
+				fmt.Println( "cannot dump RawTask:", err)
+				client.conn.Close()
+				return
+			}
+		}
 	}
-
-	// if numOfTasks <= 0 || numOfTasks > totalTaskCount {
-	// 	numOfTasks = totalTaskCount
-	// }
 	
-	// log.Printf("Start crawling %d tasks\n", numOfTasks)
-	// var counter = startTaskIndex;
-	// for i := startTaskIndex; i < numOfTasks; i += 50 {
-
-	// 	tasks, err := client.GetTasks(int(50), int(i))
-	// 	if err != nil {
-	// 		log.Fatal().Err(err).Msg("in GetProcesses")
-	// 	}
-	// 	//create folder
-	// 	var Tag string  = appConfig.taskTag + "-"
-	// 	for _, extension := range appConfig.taskExtensions{
-	// 		Tag = Tag + extension + ","
-	// 	}
-	// 	Tag = Tag + "-"
-	// 	for _, detection := range appConfig.taskDetections{
-	// 		Tag = Tag + strconv.Itoa(detection) 
-	// 	}
-		
-	// 	os.Mkdir(Tag, os.ModePerm)
-
-	// 	client.conn.Close()
-
-	// 	//for each task of list task
-
-	// 	for _, task := range tasks {
-	// 		fmt.Print("\n\n")
-	// 		// print task info
-	// 		log.Info().Msg(task.GetIdentity())
-			
-	// 		fmt.Println( "STT: ", counter)
-	// 		counter++
-			
-	// 		if err := dumpTask(client, Tag, task); err != nil {
-
-	// 			fmt.Println( "cannot dump RawTask gia tri err:", err)
-	// 			client.conn.Close()
-	// 			return
-	// 		}			
-	// 	}
-	// }
+	
 	// for _, task := range tasks {
 	// 	fmt.Print("\n\n")
 	// 	log.Info().Msg(task.GetIdentity())

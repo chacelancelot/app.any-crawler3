@@ -163,9 +163,9 @@ type (
 				Type            string `json:"type"`
 				Important       bool   `json:"important"`
 				ImportantReason string `json:"important_reason"`
-				ImportantSince  struct {
-					Date int64 `json:"$date"`
-				} `json:"important_since"`
+				// ImportantSince  struct {
+				// 	Date int64 `json:"$date"`
+				// } `json:"important_since"`
 				Injected     interface{}   `json:"injected"`
 				Serviced     interface{}   `json:"serviced"`
 				IsMainObject bool          `json:"isMainObject"`
@@ -196,9 +196,9 @@ type (
 			} `json:"processOID"`
 			Threatlevel int    `json:"threatlevel"`
 			Title       string `json:"title"`
-			FirstSeen   struct {
-				Date int64 `json:"$date"`
-			} `json:"firstSeen"`
+			// FirstSeen   struct {
+			// 	Date int64 `json:"$date"`
+			// } `json:"firstSeen"`
 			Mitre []string `json:"mitre"`
 		} `json:"fields"`
 	}
@@ -569,7 +569,7 @@ type(
 		Threats             []*Threats 
 		Registries          []*Registries 
 		DropFile			[]*DropFile
-		ProConnect			[]*ProConnect
+		//ProConnect			[]*ProConnect
 		ProModule     		[]*ProModule
     }
 )
