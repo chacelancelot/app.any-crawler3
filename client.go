@@ -61,8 +61,16 @@ type (
 	}
 )
 
+func randomEndpoint() string {
+	return "wss://app.any.run/sockjs/" + string(rand.Intn(999 - 100) + 100) + "/" + generateRandStr(8) + "/websocket"
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func NewAppAnyClient(config *AppAnyClientConfig) (*AppAnyClient, error) {
-	conn, _, err := websocket.DefaultDialer.Dial(config.Endpoint, config.ReqHeader)
+	conn, _, err := websocket.DefaultDialer.Dial(randomEndpoint(), config.ReqHeader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a new socket client connection: %s", err)
 	}
