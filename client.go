@@ -62,7 +62,7 @@ type (
 )
 
 func randomEndpoint() string {
-	return "wss://app.any.run/sockjs/" + string(rand.Intn(999 - 100) + 100) + "/" + generateRandStr(8) + "/websocket"
+	return "wss://app.any.run/sockjs/" + strconv.Itoa(rand.Intn(999 - 100) + 100) + "/" + generateRandStr(len("i73_d8dy"), "abcdefghijklmnopqrstuvwxyz0123456789") + "/websocket"
 }
 
 func init() {
@@ -130,10 +130,10 @@ func (client *AppAnyClient) recvMessageAndAssert(expectedMsg string) (bool, erro
 	return msg == expectedMsg, nil
 }
 
-func generateRandStr(n int) string {
+func generateRandStr(n int, letters string) string {
 	randStr := make([]byte, n, n)
 	for i := 0; i < n; i++ {
-		randStr[i] = LettersDigits[rand.Intn(len(LettersDigits))]
+		randStr[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(randStr)
 }
@@ -209,7 +209,7 @@ func (client *AppAnyClient) GetNumOfTasks() (uint, error) {
 func (client *AppAnyClient) GetTasks(numOfTasks, startIndex int) ([]*RawTask, error) {
 	tasks := make([]*RawTask, 0)
 	for numOfTasks > 0 {
-		id := generateRandStr(len("DrDA7Qycqa8w9aLF9"))
+		id := generateRandStr(len("DrDA7Qycqa8w9aLF9"), LettersDigits)
 		var taskCount int
 		if numOfTasks >= 50 {
 			taskCount = 50
@@ -245,7 +245,7 @@ func (client *AppAnyClient) GetTasks(numOfTasks, startIndex int) ([]*RawTask, er
 // GetProcesses returns a list of processes as "processes" tab
 func (client *AppAnyClient) GetProcesses(task *RawTask) ([]*Process, error) {
 	processes := make([]*Process, 0)
-	id := generateRandStr(len("E8ZWdmyNwRD3XBvcc"))
+	id := generateRandStr(len("E8ZWdmyNwRD3XBvcc"), LettersDigits)
 	msg := client.getProcessesMsg(id, task.ID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -272,7 +272,7 @@ func (client *AppAnyClient) GetProcesses(task *RawTask) ([]*Process, error) {
 // GetIncidents returns a list of MITRE ATT&CK  as "ATT&CK" tab
 func (client *AppAnyClient) GetIncidents(task *RawTask) ([]*Incident, error) {
 	incidents := make([]*Incident, 0)
-	id := generateRandStr(len("4aYatF54JSoCNG94C"))
+	id := generateRandStr(len("4aYatF54JSoCNG94C"), LettersDigits)
 	msg := client.getAllIncidentsMsg(id, task.ID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -299,7 +299,7 @@ func (client *AppAnyClient) GetIncidents(task *RawTask) ([]*Incident, error) {
 // GetDNSQueries returns a list of DSN queries as "DNS Queries" tab
 func (client *AppAnyClient) GetDNSQueries(task *RawTask) ([]*DNSQueries, error) {
 	dnsQueries := make([]*DNSQueries, 0)
-	id := generateRandStr(len("4aYatF54JSoCNG94C"))
+	id := generateRandStr(len("4aYatF54JSoCNG94C"), LettersDigits)
 	msg := client.getDNSQueriesMsg(id, task.ID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -326,7 +326,7 @@ func (client *AppAnyClient) GetDNSQueries(task *RawTask) ([]*DNSQueries, error) 
 // GetIps returns a list of ips connections as "ips" tab
 func (client *AppAnyClient) GetIps(task *RawTask) ([]*Ips, error) {
 	ipsQuer := make([]*Ips, 0)
-	id := generateRandStr(len("4aYatF54JSoCNG94C"))
+	id := generateRandStr(len("4aYatF54JSoCNG94C"), LettersDigits)
 	msg := client.getIpsMsg(id, task.ID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -353,7 +353,7 @@ func (client *AppAnyClient) GetIps(task *RawTask) ([]*Ips, error) {
 // GetHttpRequests returns a list of HTTP requests as "HTTP Requests" tab
 func (client *AppAnyClient) GetHttpRequests(task *RawTask) ([]*HttpRequests, error) {
 	httpRequests := make([]*HttpRequests, 0)
-	id := generateRandStr(len("6ehw2pycH63vBTmKe"))
+	id := generateRandStr(len("6ehw2pycH63vBTmKe"), LettersDigits)
 	msg := client.getAllHttpRequestsMsg(id, task.ID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -380,7 +380,7 @@ func (client *AppAnyClient) GetHttpRequests(task *RawTask) ([]*HttpRequests, err
 // GetGetThreats returns a list of Threats as "Threats" tab
 func (client *AppAnyClient) GetThreats(task *RawTask) ([]*Threats, error) {
 	threats := make([]*Threats, 0)
-	id := generateRandStr(len("4aYatF54JSoCNG94C"))
+	id := generateRandStr(len("4aYatF54JSoCNG94C"), LettersDigits)
 	msg := client.getThreatsMsg(id, task.ID, task.Fields.UUID)
 	doneMsg := client.getDoneMsg(id)
 
