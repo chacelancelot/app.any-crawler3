@@ -19,19 +19,18 @@ public_tasks:
   # extensions: "PE DLL"
   # extensions: "JAVA"
   # extensions: "HTML Documents"
-  # extensions: "Adobe Flash"
+  extensions: "Adobe Flash"
   # extensions: "Adobe PDF"
   # extensions: "Microsoft Office"
   # extensions: "Scripts"
   # extensions: "Email files"
-  extensions: "Archive files"
+  # extensions: "Archive files"
   # a list of detection type separated by a comma. Possible values are "Malicious", "Suspicious", "No threats"
-  detections: "Suspicious"
+  detections: "No threats"
+  limit: 20
 
 export:
   processes: true
   ATT&CK_matrix: true
   ip: true
-  domain: true
-  http: true
-  threat: true
+  

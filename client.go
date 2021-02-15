@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -19,19 +20,20 @@ const (
 	processesMsgFormat          = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"process\",\"params\":[{\"taskID\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"status\":100,\"important\":true}]}"]`
 	allIncidentsMsgFormat       = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"allIncidents\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"}]}"]`
 	
-	dnsMsgFormat                = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"dns\",\"params\":[{\"task\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":\"\"},70]}"]`
+	dnsMsgFormat                = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"dns\",\"params\":[{\"task\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":\"\"},100]}"]`
 
-    ipsMsgFormat                = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"ips\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":null},70]}"]`
-	
-	httpRequestsMsgFormat       = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"reqs\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":null},70]}"]`
+    ipsMsgFormat                = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"ips\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":null},100]}"]`
+
+    httpRequestsMsgFormat       = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"reqs\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"searchParam\":null},100]}"]`
 
 	threatsMsgFormat 			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"threats\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"uuid\":\"%s\",\"searchParam\":null}]}"]`
-	
+
 	registryMsgFormat			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processRegistriesWrite\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},{\"$type\":\"oid\",\"$value\":\"%s\"},70]}"]`
 	dropFileMsgFormat			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"filesOfProcess\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},50,{\"$type\":\"oid\",\"$value\":\"%s\"}]}"]`
 	processConnectMsgFormat		= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processConnections\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"processOID\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"limit\":50}]}"]`
 	processModuleMsgFormat 		= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processModules\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},{\"$type\":\"oid\",\"$value\":\"%s\"},0]}"]`
 
+	
 	doneMsgFormat               = `{"msg":"ready","subs":["%s"]}`
 	pingMsg                     = `{"msg":"ping"}`
 	pongMsg                     = `["{\"msg\":\"pong\"}"]`
@@ -63,11 +65,20 @@ type (
 		Significant bool     `json:"significant"`
 		Tag         string   `json:"tag"`
 		Skip        int      `json:"skip"`
+		Limit       int      `json:"limit"`
 	}
 )
 
+func randomEndpoint() string {
+	return "wss://app.any.run/sockjs/" + strconv.Itoa(rand.Intn(999 - 100) + 100) + "/" + generateRandStr(len("i73_d8dy"), "abcdefghijklmnopqrstuvwxyz0123456789") + "/websocket"
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func NewAppAnyClient(config *AppAnyClientConfig) (*AppAnyClient, error) {
-	conn, _, err := websocket.DefaultDialer.Dial(config.Endpoint, config.ReqHeader)
+	conn, _, err := websocket.DefaultDialer.Dial(randomEndpoint(), config.ReqHeader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a new socket client connection: %s", err)
 	}
@@ -82,11 +93,11 @@ func NewAppAnyClient(config *AppAnyClientConfig) (*AppAnyClient, error) {
 }
 
 func (client *AppAnyClient) getPublicTasksCounterMsg(id string) string {
-	return fmt.Sprintf(publicTasksCounterMsgFormat, client.appConfig.ToTaskParamsJsonQuoted(), id)
+	return fmt.Sprintf(publicTasksCounterMsgFormat, client.appConfig.ToTaskParamsJsonQuoted(50), id)
 }
 
 func (client *AppAnyClient) getPublicTasksMsg(id string, taskCount, startIndex int) string {
-	return fmt.Sprintf(publicTasksMsgFormat, id, taskCount, startIndex, client.appConfig.ToTaskParamsJsonQuoted())
+	return fmt.Sprintf(publicTasksMsgFormat, id, taskCount, startIndex, client.appConfig.ToTaskParamsJsonQuoted(20))
 }
 
 func (client *AppAnyClient) getProcessesMsg(id string, taskId string) string {
@@ -100,7 +111,6 @@ func (client *AppAnyClient) getAllIncidentsMsg(id string, taskId string) string 
 func (client *AppAnyClient)  getDNSQueriesMsg(id string, taskId string) string {
 	return fmt.Sprintf(dnsMsgFormat, id ,taskId)
 }
-
 
 func (client *AppAnyClient)  getIpsMsg(id string, taskId string) string {
 	return fmt.Sprintf(ipsMsgFormat, id, taskId)
@@ -144,10 +154,10 @@ func (client *AppAnyClient) recvMessageAndAssert(expectedMsg string) (bool, erro
 	return msg == expectedMsg, nil
 }
 
-func generateRandStr(n int) string {
+func generateRandStr(n int, letters string) string {
 	randStr := make([]byte, n, n)
 	for i := 0; i < n; i++ {
-		randStr[i] = LettersDigits[rand.Intn(len(LettersDigits))]
+		randStr[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(randStr)
 }
@@ -185,7 +195,6 @@ func (client *AppAnyClient) Connect() error {
 		return fmt.Errorf("in sendMessage: %s", err)
 	}
 	msg, err := client.recvMessage()
-	fmt.Println(msg)
 	if err != nil {
 		return fmt.Errorf("in recvMessage: %s", err)
 	}
@@ -224,7 +233,7 @@ func (client *AppAnyClient) GetNumOfTasks() (uint, error) {
 func (client *AppAnyClient) GetTasks(numOfTasks, startIndex int) ([]*RawTask, error) {
 	tasks := make([]*RawTask, 0)
 	for numOfTasks > 0 {
-		id := generateRandStr(len("DrDA7Qycqa8w9aLF9"))
+		id := generateRandStr(len("DrDA7Qycqa8w9aLF9"), LettersDigits)
 		var taskCount int
 		if numOfTasks >= 50 {
 			taskCount = 50
@@ -246,10 +255,8 @@ func (client *AppAnyClient) GetTasks(numOfTasks, startIndex int) ([]*RawTask, er
 			if buffer == doneMsg {
 				break
 			}
-			//fmt.Println( "gia tri buffer:", buffer)
 			if err := json.Unmarshal([]byte(buffer), &task); err != nil {
-				fmt.Println( "gia tri buffer:", buffer)
-				return nil, fmt.Errorf("in Unmarshal: %s", err)				
+				return nil, fmt.Errorf("in Unmarshal: %s", err)
 			}
 			tasks = append(tasks, task)
 		}
@@ -262,7 +269,7 @@ func (client *AppAnyClient) GetTasks(numOfTasks, startIndex int) ([]*RawTask, er
 // GetProcesses returns a list of processes as "processes" tab
 func (client *AppAnyClient) GetProcesses(task *RawTask) ([]*Process, error) {
 	processes := make([]*Process, 0)
-	id := generateRandStr(len("E8ZWdmyNwRD3XBvcc"))
+	id := generateRandStr(len("E8ZWdmyNwRD3XBvcc"), LettersDigits)
 	msg := client.getProcessesMsg(id, task.ID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -289,7 +296,7 @@ func (client *AppAnyClient) GetProcesses(task *RawTask) ([]*Process, error) {
 // GetIncidents returns a list of MITRE ATT&CK  as "ATT&CK" tab
 func (client *AppAnyClient) GetIncidents(task *RawTask) ([]*Incident, error) {
 	incidents := make([]*Incident, 0)
-	id := generateRandStr(len("4aYatF54JSoCNG94C"))
+	id := generateRandStr(len("4aYatF54JSoCNG94C"), LettersDigits)
 	msg := client.getAllIncidentsMsg(id, task.ID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -313,10 +320,10 @@ func (client *AppAnyClient) GetIncidents(task *RawTask) ([]*Incident, error) {
 	return incidents, nil
 }
 
-// GetDNSQueries returns a list of DNS queries as "DNS Queries" tab
+// GetDNSQueries returns a list of DSN queries as "DNS Queries" tab
 func (client *AppAnyClient) GetDNSQueries(task *RawTask) ([]*DNSQueries, error) {
 	dnsQueries := make([]*DNSQueries, 0)
-	id := generateRandStr(len("LMvsM2JcM68YCPLrD"))
+	id := generateRandStr(len("4aYatF54JSoCNG94C"), LettersDigits)
 	msg := client.getDNSQueriesMsg(id, task.ID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -343,7 +350,7 @@ func (client *AppAnyClient) GetDNSQueries(task *RawTask) ([]*DNSQueries, error) 
 // GetIps returns a list of ips connections as "ips" tab
 func (client *AppAnyClient) GetIps(task *RawTask) ([]*Ips, error) {
 	ipsQuer := make([]*Ips, 0)
-	id := generateRandStr(len("FT585KWPfKvhFeaHP"))
+	id := generateRandStr(len("4aYatF54JSoCNG94C"), LettersDigits)
 	msg := client.getIpsMsg(id, task.ID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -370,7 +377,7 @@ func (client *AppAnyClient) GetIps(task *RawTask) ([]*Ips, error) {
 // GetHttpRequests returns a list of HTTP requests as "HTTP Requests" tab
 func (client *AppAnyClient) GetHttpRequests(task *RawTask) ([]*HttpRequests, error) {
 	httpRequests := make([]*HttpRequests, 0)
-	id := generateRandStr(len("6ehw2pycH63vBTmKe"))
+	id := generateRandStr(len("6ehw2pycH63vBTmKe"), LettersDigits)
 	msg := client.getAllHttpRequestsMsg(id, task.ID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -394,10 +401,10 @@ func (client *AppAnyClient) GetHttpRequests(task *RawTask) ([]*HttpRequests, err
 	return httpRequests, nil
 }
 
-// GetThreats returns a list of Threats as "Threats" tab
+// GetGetThreats returns a list of Threats as "Threats" tab
 func (client *AppAnyClient) GetThreats(task *RawTask) ([]*Threats, error) {
 	threats := make([]*Threats, 0)
-	id := generateRandStr(len("GvtRba7ie3ZZ7rfic"))
+	id := generateRandStr(len("4aYatF54JSoCNG94C"), LettersDigits)
 	msg := client.getThreatsMsg(id, task.ID, task.Fields.UUID)
 	doneMsg := client.getDoneMsg(id)
 
@@ -424,8 +431,8 @@ func (client *AppAnyClient) GetThreats(task *RawTask) ([]*Threats, error) {
 // GetRegistry returns a list of Registry as "H_KEY" tab
 func (client *AppAnyClient) GetRegistry(task *RawTask, proc *Process) ([]*Registries, error) {
 	regis := make([]*Registries, 0)
-	
-	id := generateRandStr(len("dMXwEbLvfYZMH2Tca"))
+
+	id := generateRandStr(len("dMXwEbLvfYZMH2Tca"), LettersDigits)
 	msg := client.getRegistryMsg(id, task.ID, proc.OID)
 	//fmt.Println(msg)
 	doneMsg := client.getDoneMsg(id)
@@ -446,15 +453,15 @@ func (client *AppAnyClient) GetRegistry(task *RawTask, proc *Process) ([]*Regist
 			return nil, fmt.Errorf("in Unmarshal: %s", err)
 		}
 		regis = append(regis, NewRegistries(registry))
-	}	
-	return regis, nil	
+	}
+	return regis, nil
 }
 
 // GetDropFile returns a list of File delete as tab of process
 func (client *AppAnyClient) GetDropFile(task *RawTask, proc *Process) ([]*DropFile, error) {
 	drop := make([]*DropFile, 0)
-	
-	id := generateRandStr(len("ToDENCSZ9gnoxbPP3"))	
+
+	id := generateRandStr(len("ToDENCSZ9gnoxbPP3"), LettersDigits)
 	msg := client.getDropFileMsg(id, task.ID, proc.OID)
 	//fmt.Println(msg)
 	doneMsg := client.getDoneMsg(id)
@@ -475,14 +482,14 @@ func (client *AppAnyClient) GetDropFile(task *RawTask, proc *Process) ([]*DropFi
 			return nil, fmt.Errorf("in Unmarshal: %s", err)
 		}
 		drop = append(drop, NewDropFile(dropfile))
-	}	
-	return drop, nil	
+	}
+	return drop, nil
 }
 
 // GetProConnect returns a list of process connect ip,domain
 func (client *AppAnyClient) GetProConnect(task *RawTask, proc *Process) ([]*ProConnect, error) {
 	proCon := make([]*ProConnect, 0)
-	id := generateRandStr(len("DyrEyzFkcWL8Spngt"))
+	id := generateRandStr(len("DyrEyzFkcWL8Spngt"), LettersDigits)
 
 	msg := client.getProcessConnectMsg(id, task.ID, proc.OID)
 	//fmt.Println(msg)
@@ -504,15 +511,15 @@ func (client *AppAnyClient) GetProConnect(task *RawTask, proc *Process) ([]*ProC
 			return nil, fmt.Errorf("in Unmarshal: %s", err)
 		}
 		proCon = append(proCon, NewProConnect(proConnect))
-	}	
-	
-	return proCon, nil	
+	}
+
+	return proCon, nil
 }
 
 // GetProModule returns a list of File module as tab of process
 func (client *AppAnyClient) GetProModule(task *RawTask, proc *Process) ([]*ProModule, error) {
 	proMod := make([]*ProModule, 0)
-	id := generateRandStr(len("N47mSKx6LxhwRsRH3"))
+	id := generateRandStr(len("N47mSKx6LxhwRsRH3"), LettersDigits)
 
 	msg := client.getDropFileMsg(id, task.ID, proc.OID)
 	//fmt.Println(msg)
@@ -534,6 +541,6 @@ func (client *AppAnyClient) GetProModule(task *RawTask, proc *Process) ([]*ProMo
 			return nil, fmt.Errorf("in Unmarshal: %s", err)
 		}
 		proMod = append(proMod, NewProModule(proModule))
-	}		
-	return proMod, nil	
+	}
+	return proMod, nil
 }

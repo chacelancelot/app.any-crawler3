@@ -17,9 +17,7 @@ const (
 	DefExportProcesses   = true
 	DefExportATTCKMatrix = true
 	DefExportIp			 = true
-	DefExportDomain  	 = true
-	DefExportHttp		 = true
-	DefExportThreat		 = true
+	DefExportLimit 		 = 50
 )
 
 type AppConfig struct {
@@ -27,13 +25,10 @@ type AppConfig struct {
 	taskIsSignificant bool
 	taskExtensions    []string
 	taskDetections    []int
-
+	taskLimit		  int
 	exportProcesses   bool
 	exportATTCKMatrix bool
 	exportIp		  bool
-	exportDomain 	  bool
-	exportHttp 		  bool
-	exportThreat 	  bool
 }
 
 func ReadAppConfig(configFilePath string) (*AppConfig, error) {
@@ -54,9 +49,8 @@ func ReadAppConfig(configFilePath string) (*AppConfig, error) {
 	viper.SetDefault("export.processes", DefExportProcesses)
 	viper.SetDefault("export.ATT&CK_matrix", DefExportATTCKMatrix)
 	viper.SetDefault("export.ip", DefExportIp)
-	viper.SetDefault("export.domain", DefExportDomain)
-	viper.SetDefault("export.http", DefExportHttp)
-	viper.SetDefault("export.threat", DefExportThreat)
+	viper.SetDefault("public_tasks.limit", DefExportLimit)
+	
 	
 
 	taskTag := strings.TrimSpace(viper.GetString("public_tasks.tag"))
@@ -87,13 +81,10 @@ func ReadAppConfig(configFilePath string) (*AppConfig, error) {
 		exportProcesses:   viper.GetBool("export.processes"),
 		exportATTCKMatrix: viper.GetBool("export.ATT&CK_matrix"),
 		exportIp:		   viper.GetBool("export.ip"),
-		exportDomain:	   viper.GetBool("export.domain"),
-		exportHttp:		   viper.GetBool("export.http"),
-		exportThreat: 	   viper.GetBool("export.threat"),
 	}, nil
 }
 
-func (config *AppConfig) ToTaskParamsJsonQuoted() string {
+func (config *AppConfig) ToTaskParamsJsonQuoted(limit int) string {
 	taskParams := &TaskParams{
 		IsPublic:    true,
 		Runtype:     []string{},
@@ -101,6 +92,21 @@ func (config *AppConfig) ToTaskParamsJsonQuoted() string {
 		Ext:         config.taskExtensions,
 		Significant: config.taskIsSignificant,
 		Tag:         config.taskTag,
+		Limit:		 limit,
+	}
+	bytes, _ := json.Marshal(taskParams)
+	return strings.Trim(strconv.Quote(string(bytes)), `"`)
+}
+
+func (config *AppConfig) ToTaskParamsJsonQuoted2() string {
+	taskParams := &TaskParams{
+		IsPublic:    true,
+		Runtype:     []string{},
+		Verdict:     config.taskDetections,
+		Ext:         config.taskExtensions,
+		Significant: config.taskIsSignificant,
+		Tag:         config.taskTag,
+		Limit:		 20,
 	}
 	bytes, _ := json.Marshal(taskParams)
 	return strings.Trim(strconv.Quote(string(bytes)), `"`)
