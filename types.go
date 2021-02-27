@@ -24,6 +24,11 @@ var (
 		"Suspicious": 1,
 		"Malicious":  2,
 	}
+
+	SupportedTaskRunType = map[string]string{
+		"Url":           "0",
+		"File":          "1",
+	}
 )
 
 type (
@@ -574,6 +579,19 @@ type(
     }
 )
 
+type TaskExistsResult struct {
+	Msg        string `json:"msg"`
+	Collection string `json:"collection"`
+	ID         string `json:"id"`
+	Fields     struct {
+		TaskID       string `json:"taskId"`
+		TaskObjectID struct {
+			Type  string `json:"$type"`
+			Value string `json:"$value"`
+		} `json:"taskObjectId"`
+	} `json:"fields"`
+}
+
 func (task *RawTask) GetIdentity() string {
 	mainObject := task.Fields.Public.Objects.MainObject
 	format := "UUID: %s, MD5: %s, name: %s"
@@ -730,3 +748,5 @@ func NewProModule(rawProModule *RawProModule) *ProModule{
 		Status: 			rawProModule.Fields.Status,
 	}
 }
+
+

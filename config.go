@@ -97,17 +97,3 @@ func (config *AppConfig) ToTaskParamsJsonQuoted(limit int) string {
 	bytes, _ := json.Marshal(taskParams)
 	return strings.Trim(strconv.Quote(string(bytes)), `"`)
 }
-
-func (config *AppConfig) ToTaskParamsJsonQuoted2() string {
-	taskParams := &TaskParams{
-		IsPublic:    true,
-		Runtype:     []string{},
-		Verdict:     config.taskDetections,
-		Ext:         config.taskExtensions,
-		Significant: config.taskIsSignificant,
-		Tag:         config.taskTag,
-		Limit:		 20,
-	}
-	bytes, _ := json.Marshal(taskParams)
-	return strings.Trim(strconv.Quote(string(bytes)), `"`)
-}

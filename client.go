@@ -16,7 +16,10 @@ const (
 	// message send format
 	connectMsg                  = `["{\"msg\":\"connect\",\"version\":\"1\",\"support\":[\"1\",\"pre2\",\"pre1\"]}"]`
 	publicTasksCounterMsgFormat = `["{\"msg\":\"method\",\"method\":\"publicTasksCounter\",\"params\":[%s],\"id\":\"%s\"}"]`
-	publicTasksMsgFormat        = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"publicTasks\",\"params\":[%d,%d,%s]}"]`
+	// publicTasksMsgFormat        = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"publicTasks\",\"params\":[%d,%d,%s]}"]`
+
+	publicTasksMsgFormat        = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"publicTasks\",\"params\":[%s]}"]`
+
 	processesMsgFormat          = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"process\",\"params\":[{\"taskID\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"status\":100,\"important\":true}]}"]`
 	allIncidentsMsgFormat       = `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"allIncidents\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"}]}"]`
 	
@@ -33,6 +36,10 @@ const (
 	processConnectMsgFormat		= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processConnections\",\"params\":[{\"taskId\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"processOID\":{\"$type\":\"oid\",\"$value\":\"%s\"},\"limit\":50}]}"]`
 	processModuleMsgFormat 		= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"processModules\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},{\"$type\":\"oid\",\"$value\":\"%s\"},0]}"]`
 
+	singleTaskMsgFormat 		= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"singleTask\",\"params\":[{\"$type\":\"oid\",\"$value\":\"%s\"},true]}"]`
+	taskExitMsgFormat 			= `["{\"msg\":\"sub\",\"id\":\"%s\",\"name\":\"taskexists\",\"params\":[\"%s\"]}"]`
+
+	
 	
 	doneMsgFormat               = `{"msg":"ready","subs":["%s"]}`
 	pingMsg                     = `{"msg":"ping"}`
@@ -93,11 +100,15 @@ func NewAppAnyClient(config *AppAnyClientConfig) (*AppAnyClient, error) {
 }
 
 func (client *AppAnyClient) getPublicTasksCounterMsg(id string) string {
-	return fmt.Sprintf(publicTasksCounterMsgFormat, client.appConfig.ToTaskParamsJsonQuoted(50), id)
+	return fmt.Sprintf(publicTasksCounterMsgFormat, client.appConfig.ToTaskParamsJsonQuoted(40), id)
 }
 
-func (client *AppAnyClient) getPublicTasksMsg(id string, taskCount, startIndex int) string {
-	return fmt.Sprintf(publicTasksMsgFormat, id, taskCount, startIndex, client.appConfig.ToTaskParamsJsonQuoted(20))
+// func (client *AppAnyClient) getPublicTasksMsg(id string, taskCount, startIndex int) string {
+// 	return fmt.Sprintf(publicTasksMsgFormat, id, taskCount, startIndex, client.appConfig.ToTaskParamsJsonQuoted(50))
+// }
+
+func (client *AppAnyClient) getPublicTasksMsg(id string) string {
+	return fmt.Sprintf(publicTasksMsgFormat, id, client.appConfig.ToTaskParamsJsonQuoted(50))
 }
 
 func (client *AppAnyClient) getProcessesMsg(id string, taskId string) string {
@@ -118,6 +129,17 @@ func (client *AppAnyClient)  getIpsMsg(id string, taskId string) string {
 
 func (client *AppAnyClient) getAllHttpRequestsMsg(id string, taskId string) string {
 	return fmt.Sprintf(httpRequestsMsgFormat, id, taskId)
+}
+
+
+
+//
+func (client *AppAnyClient) getSingleTaskMsg(id string, taskId string) string {
+	return fmt.Sprintf(singleTaskMsgFormat, id, taskId)
+}
+
+func (client *AppAnyClient) getTaskExitMsg(id string, taskUuid string) string {
+	return fmt.Sprintf(taskExitMsgFormat, id, taskUuid)
 }
 
 //---------------Threats----------//
@@ -240,15 +262,22 @@ func (client *AppAnyClient) GetTasks(numOfTasks, startIndex int) ([]*RawTask, er
 		} else {
 			taskCount = numOfTasks
 		}
-		msg := client.getPublicTasksMsg(id, taskCount, startIndex)
+		msg := client.getPublicTasksMsg(id)
+		
 		doneMsg := client.getDoneMsg(id)
+		
 
 		if err := client.sendMessage(msg); err != nil {
 			return nil, fmt.Errorf("in sendMessage: %s", err)
 		}
+		print("\n Send getPublicTasksMsg: ", msg)
+		print("\n Send doneMsg getPublicTasksMsg: ", doneMsg)
 		for { // receive tasks
 			var task *RawTask
 			buffer, err := client.recvMessage()
+			
+			print("\n recvPublicTask", buffer)
+
 			if err != nil {
 				return nil, fmt.Errorf("in recvMessage: %s", err)
 			}
@@ -256,6 +285,7 @@ func (client *AppAnyClient) GetTasks(numOfTasks, startIndex int) ([]*RawTask, er
 				break
 			}
 			if err := json.Unmarshal([]byte(buffer), &task); err != nil {
+				print("Error GetTask: ", err)
 				return nil, fmt.Errorf("in Unmarshal: %s", err)
 			}
 			tasks = append(tasks, task)
@@ -543,4 +573,31 @@ func (client *AppAnyClient) GetProModule(task *RawTask, proc *Process) ([]*ProMo
 		proMod = append(proMod, NewProModule(proModule))
 	}
 	return proMod, nil
+}
+
+// check existence and get internal id
+func (client *AppAnyClient) GetTaskExists(Uuid string) ([]*TaskExistsResult, error) {
+	exit := make([]*TaskExistsResult, 0)
+	id := generateRandStr(len("4aYatF54JSoCNG94C"), LettersDigits)
+	msg := client.getTaskExitMsg(id, Uuid)
+	doneMsg := client.getDoneMsg(id)
+
+	if err := client.sendMessage(msg); err != nil {
+		return nil, fmt.Errorf("in sendMessage: %s", err)
+	}
+	for { // receive exit
+		var ex *TaskExistsResult
+		buffer, err := client.recvMessage()
+		if err != nil {
+			return nil, fmt.Errorf("in recvMessage: %s", err)
+		}
+		if buffer == doneMsg {
+			break
+		}
+		if err := json.Unmarshal([]byte(buffer), &ex); err != nil {
+			return nil, fmt.Errorf("in Unmarshal: %s", err)
+		}
+		exit = append(exit, ex)
+	}
+	return exit, nil
 }
