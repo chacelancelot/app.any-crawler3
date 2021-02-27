@@ -1,0 +1,57 @@
+https://app.any.run/tasks/e6b9c9f2-97d7-499f-8d74-5f86f44de27b/
+https://app.any.run/tasks/e5283183-af56-4628-bff3-b12572b43896/
+
+
+
+file doc:
+
+go build -o app.any-crawler.exe
+./app.any-crawler.exe -c emotet 0 500
+
+
+Thống kê: có 43 họ
+
+1. (8814_8814) da lay 		./app.any-crawler.exe -c emotet
+2. (5360_5360) da lay 		./app.any-crawler.exe -c njrat
+3. (1007_1007) da lay 		./app.any-crawler.exe -c qbot
+4. (8000_8000) da lay		./app.any-crawler.exe -c agenttesla
+5. (6473_6473) da lay		./app.any-crawler.exe -c nanocore 
+6. (6604_6604) da lay		./app.any-crawler.exe -c lokibot 
+7. (2426_2426) da lay 		./app.any-crawler.exe -c quasar
+8. (4526_4526) da lay		./app.any-crawler.exe -c formbook 
+9. (1539_1539) da lay		./app.any-crawler.exe -c wannacry
+10. (1781_1781) da lay		./app.any-crawler.exe -c ursnif
+11. (2949_2949) da lay		./app.any-crawler.exe -c remcos
+12. (144_144) da lay		./app.any-crawler.exe -c dridex
+13. (73_73) da lay		./app.any-crawler.exe -c adwind
+14. (231_231)da lay		./app.any-crawler.exe -c zloader
+17. (2518_2518) da lay		./app.any-crawler.exe -c pony
+18. (1882_1882) da lay		./app.any-crawler.exe -c trickbot
+19. (3149_3149) da lay		./app.any-crawler.exe -c azorult
+20. (459_459) da lay 		./app.any-crawler.exe -c revenge
+21. (1248_1248) da lay 		./app.any-crawler.exe -c netwire
+22. (3195_ 3195) da lay 	./app.any-crawler.exe -c hawkeye
+23. (763_763) da lay		./app.any-crawler.exe -c sodinokibi
+24. (234_234) da lay		./app.any-crawler.exe -c danabot
+25. (783_783) da lay		./app.any-crawler.exe -c dharma
+26. (1603_1603) da lay 		./app.any-crawler.exe -c gandcrab
+27. (192_192) da lay 		./app.any-crawler.exe -c maze
+28. (48_48) da lay		./app.any-crawler.exe -c netwalker
+29. (10_10) da lay 		./app.any-crawler.exe -c wshrat
+30. (1219_1219) da lay 		./app.any-crawler.exe -c vidar
+31. (941_941) da lay 		./app.any-crawler.exe -c predator
+32. (655_655) da lay 		./app.any-crawler.exe -c troldesh
+33. (386_386) da lay 		./app.any-crawler.exe -c glupteba
+34. (273_273) da lay 		./app.any-crawler.exe -c nemty
+35. (121_121) da lay 		./app.any-crawler.exe -c icedid
+36. (411_411) da lay 		./app.any-crawler.exe -c raccoon
+37. (199_199) da lay		./app.any-crawler.exe -c ryuk
+38. (218_218) da lay 		./app.any-crawler.exe -c flawedammyy
+39. (399_399) da lay		./app.any-crawler.exe -c gootkit
+40. (175_175) da lay 		./app.any-crawler.exe -c hancitor
+41. (87)			./app.any-crawler.exe -c crimson rat
+42. (1070)			./app.any-crawler.exe -c orcus
+43. ./app.any-crawler.exe -c avemaria
+44. ./app.any-crawler.exe -c smoke
+
+
